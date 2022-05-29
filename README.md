@@ -38,6 +38,7 @@ The following example demonstrates the usage of FutureSQL in conjunction with QC
 
 // A data structure that represents data from the "test" table
 struct HelloWorld {
+    // Types that the database columns can be converted to. The types must be convertible from QVariant.
     using ColumnTypes = std::tuple<int, QString>;
 
     // This function get's a row from the database as a tuple, and puts it into the HelloWorld structs.
