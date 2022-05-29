@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2022 Jonah Brüchert <jbb@kaidan.im
+
+SPDX-License-Identifier: BSD-2-Clause
+-->
+
 # FutureSQL
 
 A non-blocking database framework for Qt.

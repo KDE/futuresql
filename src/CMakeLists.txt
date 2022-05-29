@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Jonah Brüchert <jbb@kaidan.im
+#
+# SPDX-License-Identifier: BSD-2-Clause
+
 add_library(futuresql SHARED threadeddatabase.cpp)
 
 target_link_libraries(futuresql PUBLIC Qt${QT_MAJOR_VERSION}::Core Qt${QT_MAJOR_VERSION}::Sql)

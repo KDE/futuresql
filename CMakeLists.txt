@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Jonah Brüchert <jbb@kaidan.im
+#
+# SPDX-License-Identifier: BSD-2-Clause
+
 cmake_minimum_required(VERSION 3.19)
 
 project(futuresql LANGUAGES CXX VERSION "0.1.0")

@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2022 Jonah Brüchert <jbb@kaidan.im>
 //
-// SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
+// SPDX-License-Identifier: LGPL-2.1-only OR LGPL-3.0-only
 
 #include "threadeddatabase.h"
 
