@@ -71,6 +71,9 @@ concept FromSql = requires(T v, typename T::ColumnTypes row)
 
 struct ThreadedDatabasePrivate;
 
+///
+/// A database connection that lives on a new thread
+///
 class FUTURESQL_EXPORT ThreadedDatabase : public QThread {
 public:
     ///

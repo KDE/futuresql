@@ -1,0 +1,16 @@
+maintainer: jbbgameich
+description: Non-blocking database framework for Qt
+type: functional
+platforms:
+    - name: Linux
+    - name: FreeBSD
+    - name: Android
+    - name: iOS
+    - name: Windows
+    - name: macOS
+public_lib: true
+deprecated: false
+release: true
+libraries:
+ - cmake: FutureSQL::FutureSQL
+cmakename: FutureSQL
