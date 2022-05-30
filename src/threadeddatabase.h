@@ -102,7 +102,7 @@ public:
     /// Each subdirectory needs to contain a file named up.sql.
     ///
     /// \param Directory which contains the migrations.
-    /// \return
+    /// \return a future that finishes when the database changes are finished
     ///
     auto runMigrations(const QString &migrationDirectory) -> QFuture<void>;
 
@@ -114,7 +114,7 @@ public:
     ///
     /// @warning This function should only be used for the initial switch from a different migration system, for example a custom made one.
     /// \param migrationName
-    /// \return
+    /// \return a future that finishes when the database changes are finished
     ///
     auto setCurrentMigrationLevel(const QString &migrationName) -> QFuture<void>;
 
