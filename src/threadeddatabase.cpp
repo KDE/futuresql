@@ -223,7 +223,7 @@ QSqlQuery runQuery(QSqlQuery &query)
     if (!query.exec()) {
         printSqlError(query);
     }
-    return std::move(query);
+    return query;
 }
 
 }
@@ -297,11 +297,11 @@ std::unique_ptr<ThreadedDatabase> ThreadedDatabase::establishConnection(const Da
 }
 
 auto ThreadedDatabase::runMigrations(const QString &migrationDirectory) -> QFuture<void> {
-    return db().runMigrations(migrationDirectory);
+    return d->db.runMigrations(migrationDirectory);
 }
 
 auto ThreadedDatabase::setCurrentMigrationLevel(const QString &migrationName) -> QFuture<void> {
-    return db().setCurrentMigrationLevel(migrationName);
+    return d->db.setCurrentMigrationLevel(migrationName);
 }
 
 ThreadedDatabase::ThreadedDatabase()
