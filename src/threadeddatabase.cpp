@@ -58,7 +58,7 @@ void runDatabaseMigrations(QSqlDatabase &database, const QString &migrationDirec
     createInternalTable(database);
 
     QDir dir(migrationDirectory);
-    auto entries = dir.entryList(QDir::Filter::Dirs | QDir::Filter::NoDotAndDotDot, QDir::SortFlag::Name);
+    const auto entries = dir.entryList(QDir::Filter::Dirs | QDir::Filter::NoDotAndDotDot, QDir::SortFlag::Name);
 
     const QString currentVersion = currentDatabaseVersion(database);
     for (const auto &entry : entries) {
