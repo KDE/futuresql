@@ -44,22 +44,13 @@ void markMigrationRun(QSqlDatabase &database, const QString &name) {
     }
 }
 
-bool checkMigrationAlreadyRun(QSqlDatabase &database, const QString &name) {
-    qCDebug(asyncdatabase) << "Checking whether migration" << name << "is already applied";
+QString currentDatabaseVersion(QSqlDatabase &database) {
     QSqlQuery query(database);
-    query.prepare(QStringLiteral("select count(*) from " SCHAMA_MIGRATIONS_TABLE " where version = :name"));
-    query.bindValue(QStringLiteral(":name"), name);
+    query.prepare(QStringLiteral("select version from " SCHAMA_MIGRATIONS_TABLE " order by version desc limit 1"));
     query.exec();
 
     query.next();
-    int count = query.value(0).toInt();
-    bool isApplied = count > 0;
-    if (isApplied) {
-        qCDebug(asyncdatabase) << "… yes";
-    } else {
-        qDebug(asyncdatabase) << "… no";
-    }
-    return isApplied;
+    return query.value(0).toString();
 }
 
 void runDatabaseMigrations(QSqlDatabase &database, const QString &migrationDirectory)
@@ -69,9 +60,10 @@ void runDatabaseMigrations(QSqlDatabase &database, const QString &migrationDirec
     QDir dir(migrationDirectory);
     auto entries = dir.entryList(QDir::Filter::Dirs | QDir::Filter::NoDotAndDotDot, QDir::SortFlag::Name);
 
+    const QString currentVersion = currentDatabaseVersion(database);
     for (const auto &entry : entries) {
         QDir subdir(entry);
-        if (!checkMigrationAlreadyRun(database, subdir.dirName())) {
+        if (subdir.dirName() > currentVersion) {
             QFile file(migrationDirectory % QDir::separator() % entry % QDir::separator() % "up.sql");
             if (!file.open(QFile::ReadOnly)) {
                 qCDebug(asyncdatabase) << "Failed to open migration file" << file.fileName();
