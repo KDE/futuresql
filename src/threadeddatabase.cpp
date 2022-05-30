@@ -38,7 +38,7 @@ void markMigrationRun(QSqlDatabase &database, const QString &name) {
     if (!query.prepare(QStringLiteral("insert into " SCHAMA_MIGRATIONS_TABLE " (version) values (:name)"))) {
         printSqlError(query);
     }
-    query.bindValue(QStringLiteral(":name"), QVariant(name));
+    query.bindValue(QStringLiteral(":name"), name);
     if (!query.exec()) {
         printSqlError(query);
     }
@@ -48,7 +48,7 @@ bool checkMigrationAlreadyRun(QSqlDatabase &database, const QString &name) {
     qCDebug(asyncdatabase) << "Checking whether migration" << name << "is already applied";
     QSqlQuery query(database);
     query.prepare(QStringLiteral("select count(*) from " SCHAMA_MIGRATIONS_TABLE " where version = :name"));
-    query.bindValue(QStringLiteral(":name"), QVariant(name));
+    query.bindValue(QStringLiteral(":name"), name);
     query.exec();
 
     query.next();
