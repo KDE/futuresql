@@ -144,6 +144,19 @@ QFuture<void> AsyncSqlDatabase::establishConnection(const DatabaseConfiguration 
     });
 }
 
+auto AsyncSqlDatabase::runMigrations(const QString &migrationDirectory) -> QFuture<void> {
+    return runAsync([=, this] {
+        runDatabaseMigrations(d->database, migrationDirectory);
+    });
+}
+
+auto AsyncSqlDatabase::setCurrentMigrationLevel(const QString &migrationName) -> QFuture<void> {
+    return runAsync([=, this] {
+        createInternalTable(d->database);
+        markMigrationRun(d->database, migrationName);
+    });
+}
+
 AsyncSqlDatabase::AsyncSqlDatabase()
     : QObject()
     , d(std::make_unique<AsyncSqlDatabasePrivate>())
@@ -289,6 +302,14 @@ std::unique_ptr<ThreadedDatabase> ThreadedDatabase::establishConnection(const Da
     threadedDb->start();
     threadedDb->d->db.establishConnection(config);
     return threadedDb;
+}
+
+auto ThreadedDatabase::runMigrations(const QString &migrationDirectory) -> QFuture<void> {
+    return db().runMigrations(migrationDirectory);
+}
+
+auto ThreadedDatabase::setCurrentMigrationLevel(const QString &migrationName) -> QFuture<void> {
+    return db().setCurrentMigrationLevel(migrationName);
 }
 
 ThreadedDatabase::ThreadedDatabase()

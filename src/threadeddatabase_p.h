@@ -132,11 +132,9 @@ public:
         });
     }
 
-    auto runMigrations(const QString &migrationDirectory) -> QFuture<void> {
-        return runAsync([=, this] {
-            runDatabaseMigrations(db(), migrationDirectory);
-        });
-    }
+    auto runMigrations(const QString &migrationDirectory) -> QFuture<void>;
+
+    auto setCurrentMigrationLevel(const QString &migrationName) -> QFuture<void>;
 
 private:
     template <typename ...Args>

@@ -104,9 +104,19 @@ public:
     /// \param Directory which contains the migrations.
     /// \return
     ///
-    auto runMigrations(const QString &migrationDirectory) -> QFuture<void> {
-        return db().runMigrations(migrationDirectory);
-    }
+    auto runMigrations(const QString &migrationDirectory) -> QFuture<void>;
+
+    ///
+    /// Declare that the database is currently at the state of the migration in the migration subdirectory
+    /// migrationName.
+    ///
+    /// The automatic migrations will then start with all migrations that are newer than migrationName.
+    ///
+    /// @warning This function should only be used for the initial switch from a different migration system, for example a custom made one.
+    /// \param migrationName
+    /// \return
+    ///
+    auto setCurrentMigrationLevel(const QString &migrationName) -> QFuture<void>;
 
     ///
     /// \brief Execute an SQL query on the database, retrieving the result.
