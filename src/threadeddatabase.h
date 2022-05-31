@@ -152,6 +152,10 @@ public:
         return std::move(SelectStatement::build().db(this));
     }
 
+    UpdateStatement update() {
+        return UpdateStatement::build().db(this);
+    }
+
     ThreadedDatabase();
     ~ThreadedDatabase();
 
@@ -163,6 +167,7 @@ private:
 
     friend struct InsertStatement;
     friend struct SelectStatement;
+    friend struct UpdateStatement;
 };
 
 ///

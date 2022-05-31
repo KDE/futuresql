@@ -57,8 +57,8 @@ QCoro::Task<> databaseExample() {
     co_await database->insert()
             .ignoreExisting()
             .into("test")
-            .columns("id", "data")
-            .values(0, "Hello World")
+            .columns("data")
+            .values("Hello World")
             .execute();
 
     // Retrieve some data from the database.
@@ -73,8 +73,11 @@ QCoro::Task<> databaseExample() {
                 .andWhere()
                     .attr("data").equals().value("Hello World")
                 .orWhere()
+                    .attr("data").equals().value("Penguins can fly")
+                .orWhere()
                     .attr("id").equals().value(2)
             )
+            .groupBy("data")
             .orderBy("id", SelectStatement::Ascending)
             .getResults<HelloWorld>();
 
@@ -82,6 +85,12 @@ QCoro::Task<> databaseExample() {
     for (const auto &result : results) {
         qDebug() << result.id << result.data;
     }
+
+    co_await database->update()
+            .table("test")
+            .set("data", "Penguins can fly")
+            .where(Condition().attr("id").geq().value(10))
+            .execute();
 
     // Quit the event loop as we are done
     QCoreApplication::instance()->quit();

@@ -80,6 +80,12 @@ struct Condition {
         return condition;
     }
 
+    std::vector<Condition> collect() {
+        auto c = conditions;
+        c.push_back(*this);
+        return c;
+    }
+
     QString string() const {
         QString str;
         QTextStream out(&str);
@@ -241,6 +247,11 @@ struct SelectStatement {
         return *this;
     }
 
+    SelectStatement &groupBy(const QString &attribute) {
+        m_groupBy = attribute;
+        return *this;
+    }
+
     SelectStatement &orderBy(const QString &attribute, Order order) {
         m_orderBy = attribute;
         m_order = order;
@@ -287,6 +298,10 @@ struct SelectStatement {
             out << m_where->string() << " ";
         }
 
+        if (m_groupBy) {
+            out << "GROUP BY " << *m_groupBy << " ";
+        }
+
         if (m_order && m_orderBy) {
             out << "ORDER BY ";
             out << *m_orderBy << " ";
@@ -323,8 +338,72 @@ private:
     std::optional<QString> m_into;
     std::vector<QString> m_from;
     std::optional<Condition> m_where;
+    std::optional<QString> m_groupBy;
     std::optional<Order> m_order;
     std::optional<QString> m_orderBy;
 
     ThreadedDatabase *m_db = nullptr;
+};
+
+struct UpdateStatement {
+    static UpdateStatement build() {
+        return UpdateStatement {};
+    }
+
+    UpdateStatement &db(ThreadedDatabase *db) {
+        m_db = db;
+        return *this;
+    }
+
+    UpdateStatement &table(const QString &tableName) {
+        m_table = tableName;
+        return *this;
+    }
+
+    UpdateStatement &set(const QString &attribute, const QVariant &value) {
+        m_sets.push_back({attribute, value});
+        return *this;
+    }
+
+    UpdateStatement &where(Condition condition) {
+        m_condition = condition;
+        return *this;
+    }
+
+    QString string() {
+        QString str;
+        QTextStream out(&str);
+
+        out << "UPDATE " << m_table << " SET ";
+        out << m_sets.front().first << " = " << " ? ";
+        std::for_each(m_sets.begin() + 1, m_sets.end(), [&](auto pair) {
+            auto [key, value] = pair;
+            out << ", " << key << " = " << " ? ";
+        });
+
+        if (m_condition) {
+            out << "WHERE " << m_condition->string() << " ";
+        }
+
+        return str;
+    }
+
+    std::vector<QVariant> bindValues() {
+        std::vector<QVariant> values;
+        std::ranges::transform(m_sets, std::back_inserter(values), [](const auto pair) {
+            return pair.second;
+        });
+        std::ranges::transform(m_condition->collect(), std::back_inserter(values), [](const auto condition) {
+            return condition.m_cmpValue;
+        });
+        return values;
+    }
+
+    QFuture<void> execute();
+
+    QString m_table;
+    std::vector<std::pair<QString, QVariant>> m_sets;
+    std::optional<Condition> m_condition;
+
+    ThreadedDatabase *m_db;
 };
