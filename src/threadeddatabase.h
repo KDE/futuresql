@@ -16,8 +16,10 @@ class QSqlDatabase;
 #include <optional>
 #include <tuple>
 #include <vector>
+#include <ranges>
 
 #include "threadeddatabase_p.h"
+#include "querygenerator.h"
 
 #include <futuresql_export.h>
 
@@ -142,13 +144,25 @@ public:
         return db().getResult<T, Args...>(sqlQuery, args...);
     }
 
+    InsertStatement insert() {
+        return InsertStatement::build().db(this);
+    };
+
+    SelectStatement select() {
+        return SelectStatement::build().db(this);
+    }
+
     ThreadedDatabase();
     ~ThreadedDatabase();
 
-private:
+protected:
     asyncdatabase_private::AsyncSqlDatabase &db();
 
+private:
     std::unique_ptr<ThreadedDatabasePrivate> d;
+
+    friend struct InsertStatement;
+    friend struct SelectStatement;
 };
 
 ///

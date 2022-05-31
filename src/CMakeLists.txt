@@ -2,7 +2,12 @@
 #
 # SPDX-License-Identifier: BSD-2-Clause
 
-add_library(futuresql SHARED threadeddatabase.cpp)
+add_library(futuresql SHARED
+    threadeddatabase.cpp
+    threadeddatabase_p.h
+    querygenerator.cpp
+    querygenerator_p.h
+)
 
 target_link_libraries(futuresql PUBLIC Qt${QT_MAJOR_VERSION}::Core Qt${QT_MAJOR_VERSION}::Sql)
 
@@ -35,6 +40,7 @@ set(FutureSQL_HEADERS threadeddatabase.h)
 ecm_generate_headers(FutureSQL_CAMEL_CASE_HEADERS
     HEADER_NAMES
     ThreadedDatabase
+    QueryGenerator
 
     REQUIRED_HEADERS
     ${FutureSQL_HEADERS}

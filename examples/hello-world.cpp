@@ -14,6 +14,7 @@
 
 // FutureSQL
 #include <ThreadedDatabase>
+#include <QueryGenerator>
 
 // STL
 #include <tuple>
@@ -53,11 +54,21 @@ QCoro::Task<> databaseExample() {
     co_await database->execute("CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT)");
 
     // Query parameters are bound by position in the query. The execute function is variadic and you can add as many parameters as you need.
-    co_await database->execute("INSERT INTO test (data) VALUES (?)", QStringLiteral("Hello World"));
+    co_await database->insert()
+            .ignoreExisting()
+            .into("test")
+            .columns("data")
+            .values("Hello World")
+            .execute();
 
     // Retrieve some data from the database.
     // The data is directly returned as our HelloWorld struct.
-    auto results = co_await database->getResults<HelloWorld>("SELECT * FROM test");
+    auto results = co_await database->select()
+            .constraint(SelectStatement::Distinct)
+            .columns("*")
+            .from("test")
+            .where("id", Condition::GreaterThan, "10")
+            .getResults<HelloWorld>();
 
     // Print out the data in the result list
     for (const auto &result : results) {

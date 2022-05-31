@@ -149,6 +149,33 @@ auto AsyncSqlDatabase::setCurrentMigrationLevel(const QString &migrationName) ->
     });
 }
 
+QFuture<void> AsyncSqlDatabase::executeGeneric(const QString &query, const std::vector<QVariant> &args)
+{
+    return runAsync([=, this] {
+        auto q = prepareQuery(d->database, query);
+        int i = 0;
+        for (const auto &arg : args) {
+            q.bindValue(i, arg);
+            i++;
+        }
+        runQuery(q);
+    });
+}
+
+auto AsyncSqlDatabase::fetchGeneric(const QString &query, const std::vector<QVariant> &args) -> QFuture<Rows>
+{
+    return runAsync([=, this] {
+        auto q = prepareQuery(d->database, query);
+        int i = 0;
+        for (const auto &arg : args) {
+            q.bindValue(i, arg);
+            i++;
+        }
+        q = runQuery(q);
+        return retrieveRows(q);
+    });
+}
+
 AsyncSqlDatabase::AsyncSqlDatabase()
     : QObject()
     , d(std::make_unique<AsyncSqlDatabasePrivate>())

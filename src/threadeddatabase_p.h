@@ -82,6 +82,15 @@ auto parseRows(const Rows &rows) -> std::vector<RowTypesTuple> {
     return parsedRows;
 }
 
+template <typename T>
+auto deserializeRows(const Rows &databaseRows) -> std::vector<T> {
+    const auto rows = parseRows<typename T::ColumnTypes>(databaseRows);
+
+    std::vector<T> deserializedRows;
+    std::ranges::transform(rows, std::back_inserter(deserializedRows), T::fromSql);
+    return deserializedRows;
+}
+
 void runDatabaseMigrations(QSqlDatabase &database, const QString &migrationDirectory);
 
 void printSqlError(const QSqlQuery &query);
@@ -105,11 +114,7 @@ public:
     auto getResults(const QString &sqlQuery, Args... args) -> QFuture<std::vector<T>> {
         return runAsync([=, this] {
             auto query = executeQuery(sqlQuery, args...);
-            const auto rows = parseRows<typename T::ColumnTypes>(retrieveRows(query));
-
-            std::vector<T> deserializedRows;
-            std::ranges::transform(rows, std::back_inserter(deserializedRows), T::fromSql);
-            return deserializedRows;
+            return deserializeRows<T>(retrieveRows(query));
         });
     }
 
@@ -135,6 +140,10 @@ public:
     auto runMigrations(const QString &migrationDirectory) -> QFuture<void>;
 
     auto setCurrentMigrationLevel(const QString &migrationName) -> QFuture<void>;
+
+    // Only for the query generator
+    auto executeGeneric(const QString &query, const std::vector<QVariant> &args) -> QFuture<void>;
+    auto fetchGeneric(const QString &query, const std::vector<QVariant> &args) -> QFuture<Rows> ;
 
 private:
     template <typename ...Args>
