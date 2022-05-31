@@ -25,63 +25,108 @@ struct Condition {
         Or
     };
 
+    Condition &attr(const QString &attribute) {
+        m_attribute = attribute;
+        return *this;
+    }
+
+    Condition &equals() {
+        m_op = Equal;
+        return *this;
+    }
+
+    Condition &leq() {
+        m_op = LessOrEqual;
+        return *this;
+    }
+
+    Condition &geq() {
+        m_op = GreaterOrEqual;
+        return *this;
+    }
+
+    Condition &lt() {
+        m_op = LessThan;
+        return *this;
+    }
+
+    Condition &gt() {
+        m_op = GreaterThan;
+        return *this;
+    }
+
+    Condition &value(const QVariant &value) {
+        m_cmpValue = value;
+        return *this;
+    }
+
+    Condition andWhere() {
+        m_chain = Chain::And;
+
+        Condition condition;
+        condition.conditions = conditions;
+        condition.conditions.push_back(*this);
+
+        return condition;
+    }
+
+    Condition orWhere() {
+        m_chain = Chain::Or;
+
+        Condition condition;
+        condition.conditions = conditions;
+        condition.conditions.push_back(*this);
+
+        return condition;
+    }
+
     QString string() const {
         QString str;
         QTextStream out(&str);
 
-        out << m_attribute;
-        switch (m_op) {
-        case Condition::Equal:
-            out << " == ";
-            break;
-        case Condition::LessThan:
-            out << " < ";
-            break;
-        case Condition::GreaterThan:
-            out << " > ";
-            break;
-        case Condition::LessOrEqual:
-            out << " <= ";
-            break;
-        case Condition::GreaterOrEqual:
-            out << " >= ";
-            break;
-        }
-        out  << "?" << " ";
+        auto generateClause = [&](Condition condition) {
+            out << condition.m_attribute;
+            switch (condition.m_op) {
+            case Condition::Equal:
+                out << " == ";
+                break;
+            case Condition::LessThan:
+                out << " < ";
+                break;
+            case Condition::GreaterThan:
+                out << " > ";
+                break;
+            case Condition::LessOrEqual:
+                out << " <= ";
+                break;
+            case Condition::GreaterOrEqual:
+                out << " >= ";
+                break;
+            }
+            out  << "? ";
 
-        if (m_chain && m_nextCondition) {
-            switch (*m_chain) {
+            if (condition.m_chain) {
+            switch(*condition.m_chain) {
             case And:
                 out << "AND ";
                 break;
             case Or:
                 out << "OR ";
-                break;
             }
+            }
+        };
 
-            out << m_nextCondition->string();
-        }
+        std::ranges::for_each(conditions, generateClause);
+        generateClause(*this);
 
         return str;
-    }
-
-    std::vector<QVariant> bindValues() const {
-        std::vector<QVariant> values;
-        values.push_back(m_cmpValue);
-
-        if (m_nextCondition) {
-            auto other = m_nextCondition->bindValues();
-            values.insert(values.end(), other.begin(), other.end());
-        }
-
-        return values;
     }
 
     QString m_attribute;
     Operator m_op;
     QVariant m_cmpValue;
     std::optional<Chain> m_chain;
-    std::shared_ptr<Condition> m_nextCondition;
+    std::vector<Condition> conditions;
 };
 
 class ThreadedDatabase;
@@ -156,7 +201,7 @@ struct SelectStatement {
         Distinct
     };
 
-    enum OrderBy {
+    enum Order {
         Ascending,
         Descending
     };
@@ -191,15 +236,14 @@ struct SelectStatement {
         return *this;
     }
 
-    SelectStatement &where(const QString &attribute, Condition::Operator op, const QString &cmpValue) {
-        m_where = Condition {
-            attribute,
-            op,
-            cmpValue
-        };
+    SelectStatement &where(Condition &condition) {
+        m_where = std::move(condition);
+        return *this;
+    }
 
-        m_bindValues = m_where->bindValues();
-
+    SelectStatement &orderBy(const QString &attribute, Order order) {
+        m_orderBy = attribute;
+        m_order = order;
         return *this;
     }
 
@@ -243,13 +287,16 @@ struct SelectStatement {
             out << m_where->string() << " ";
         }
 
-        if (m_order) {
+        if (m_order && m_orderBy) {
             out << "ORDER BY ";
+            out << *m_orderBy << " ";
             switch (*m_order) {
-            case OrderBy::Ascending:
-                out << "ASC";
-            case OrderBy::Descending:
-                out << "DESC";
+            case Order::Ascending:
+                out << "ASC ";
+                break;
+            case Order::Descending:
+                out << "DESC ";
+                break;
             }
         }
 
@@ -276,8 +323,8 @@ private:
     std::optional<QString> m_into;
     std::vector<QString> m_from;
     std::optional<Condition> m_where;
-    std::optional<OrderBy> m_order;
+    std::optional<Order> m_order;
+    std::optional<QString> m_orderBy;
 
-    std::vector<QVariant> m_bindValues;
     ThreadedDatabase *m_db = nullptr;
 };

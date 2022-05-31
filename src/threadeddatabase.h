@@ -149,7 +149,7 @@ public:
     };
 
     SelectStatement select() {
-        return SelectStatement::build().db(this);
+        return std::move(SelectStatement::build().db(this));
     }
 
     ThreadedDatabase();

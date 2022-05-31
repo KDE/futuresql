@@ -9,5 +9,12 @@ QFuture<void> InsertStatement::execute() {
 
 QFuture<asyncdatabase_private::Rows> SelectStatement::genericGetResults()
 {
-    return m_db->db().fetchGeneric(string(), m_bindValues);
+    std::vector<QVariant> bindValues;
+    if (m_where) {
+        ranges::transform(m_where->conditions, std::back_inserter(bindValues), [](Condition condition) {
+            return condition.m_cmpValue;
+        });
+        bindValues.push_back(m_where->m_cmpValue);
+    }
+    return m_db->db().fetchGeneric(string(), bindValues);
 }

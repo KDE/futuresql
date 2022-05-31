@@ -57,8 +57,8 @@ QCoro::Task<> databaseExample() {
     co_await database->insert()
             .ignoreExisting()
             .into("test")
-            .columns("data")
-            .values("Hello World")
+            .columns("id", "data")
+            .values(0, "Hello World")
             .execute();
 
     // Retrieve some data from the database.
@@ -67,7 +67,15 @@ QCoro::Task<> databaseExample() {
             .constraint(SelectStatement::Distinct)
             .columns("*")
             .from("test")
-            .where("id", Condition::GreaterThan, "10")
+            .where(
+                Condition()
+                    .attr("id").geq().value(4)
+                .andWhere()
+                    .attr("data").equals().value("Hello World")
+                .orWhere()
+                    .attr("id").equals().value(2)
+            )
+            .orderBy("id", SelectStatement::Ascending)
             .getResults<HelloWorld>();
 
     // Print out the data in the result list
