@@ -212,6 +212,10 @@ struct SelectStatement {
         Descending
     };
 
+    enum Join {
+        Natural
+    };
+
     static SelectStatement build() {
         return SelectStatement {};
     }
@@ -258,6 +262,12 @@ struct SelectStatement {
         return *this;
     }
 
+    SelectStatement &naturalJoin(const QString &table) {
+        m_joinType = Natural;
+        m_joinTable = table;
+        return *this;
+    }
+
     QString string() const {
         QString str;
         QTextStream out(&str);
@@ -291,6 +301,15 @@ struct SelectStatement {
                 out << "," << from;
             });
             out << " ";
+        }
+
+        if (m_joinTable) {
+            out << " NATURAL JOIN ";
+            switch (m_joinType) {
+            case Natural:
+                out << *m_joinTable << " ";
+                break;
+            }
         }
 
         if (m_where) {
@@ -337,6 +356,8 @@ private:
     std::vector<QString> m_columns;
     std::optional<QString> m_into;
     std::vector<QString> m_from;
+    Join m_joinType;
+    std::optional<QString> m_joinTable;
     std::optional<Condition> m_where;
     std::optional<QString> m_groupBy;
     std::optional<Order> m_order;

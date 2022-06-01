@@ -19,6 +19,8 @@
 // STL
 #include <tuple>
 
+constexpr auto TEST_TABLE = "test";
+
 
 // A data structure that represents data from the "test" table
 struct HelloWorld {
@@ -56,7 +58,7 @@ QCoro::Task<> databaseExample() {
     // Query parameters are bound by position in the query. The execute function is variadic and you can add as many parameters as you need.
     co_await database->insert()
             .ignoreExisting()
-            .into("test")
+            .into(TEST_TABLE)
             .columns("data")
             .values("Hello World")
             .execute();
@@ -66,7 +68,7 @@ QCoro::Task<> databaseExample() {
     auto results = co_await database->select()
             .constraint(SelectStatement::Distinct)
             .columns("*")
-            .from("test")
+            .from(TEST_TABLE)
             .where(
                 Condition()
                     .attr("id").geq().value(4)
@@ -77,6 +79,7 @@ QCoro::Task<> databaseExample() {
                 .orWhere()
                     .attr("id").equals().value(2)
             )
+            .naturalJoin(TEST_TABLE)
             .groupBy("data")
             .orderBy("id", SelectStatement::Ascending)
             .getResults<HelloWorld>();
