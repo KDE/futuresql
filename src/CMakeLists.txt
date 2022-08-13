@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2022 Jonah Brüchert <jbb@kaidan.im
+# SPDX-FileCopyrightText: 2022 Jonah Brüchert <jbb@kaidan.im>
 #
 # SPDX-License-Identifier: BSD-2-Clause
 
