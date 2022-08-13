@@ -2,7 +2,10 @@
 #
 # SPDX-License-Identifier: BSD-2-Clause
 
-add_executable(hello-world hello-world.cpp)
+include_directories(${CMAKE_BINARY_DIR}/src ${CMAKE_SOURCE_DIR}/src)
 
-target_link_libraries(hello-world QCoro5::Core futuresql)
-target_include_directories(hello-world PUBLIC ${CMAKE_BINARY_DIR}/src ${CMAKE_SOURCE_DIR}/src)
+add_executable(hello-world hello-world.cpp)
+add_executable(transaction transaction.cpp)
+
+target_link_libraries(hello-world Qt::Core QCoro5::Core futuresql)
+target_link_libraries(transaction Qt::Core QCoro5::Core futuresql)
