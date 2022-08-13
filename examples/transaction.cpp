@@ -2,6 +2,12 @@
 //
 // SPDX-License-Identifier: BSD-2-Clause
 
+/*
+ * This example demonstrates how to use transactions with FutureSQL
+ * For explanations of the general concepts, see the hello-world example,
+ * which is very similar (except it doesn't use transactions, of course),
+ * but it contains more comments.
+ */
 
 // Qt
 #include <QCoreApplication>
@@ -10,7 +16,6 @@
 // QCoro
 #include <QCoro/Task>
 #include <QCoro/QCoroFuture>
-#include <QCoro/QCoroSignal>
 
 // FutureSQL
 #include <ThreadedDatabase>
@@ -18,13 +23,20 @@
 // STL
 #include <tuple>
 
+// Why is this function not part of the library, I hear you ask.
+// Currently, FutureSQL should not hard-depend on QCoro,
+// even though with Qt5, QCoro is the only way to use it without
+// hand-crafting helper functions to deal with QFutures.
+template <typename Func>
+QCoro::Task<> transaction(std::unique_ptr<ThreadedDatabase> &database, Func queryFunc) {
+    co_await database->execute("BEGIN TRANSACTION");
+    co_await queryFunc();
+    co_await database->execute("COMMIT");
+}
 
-// A data structure that represents data from the "test" table
 struct HelloWorld {
-    // Types that the database columns can be converted to. The types must be convertible from QVariant.
     using ColumnTypes = std::tuple<int, QString>;
 
-    // This function get's a row from the database as a tuple, and puts it into the HelloWorld structs.
     static HelloWorld fromSql(ColumnTypes tuple) {
         auto [id, data] = tuple;
         return HelloWorld { id, data };
@@ -45,11 +57,14 @@ QCoro::Task<> databaseExample() {
     // Here we open the database file, and get a handle to the database.
     auto database = ThreadedDatabase::establishConnection(config);
 
-    // Execute some queries.
-    co_await database->execute("CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT)");
+    // Run the following steps in a transaction
+    co_await transaction(database, [&database]() -> QCoro::Task<> {
+        // Create the table
+        co_await database->execute("CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT)");
 
-    // Query parameters are bound by position in the query. The execute function is variadic and you can add as many parameters as you need.
-    co_await database->execute("INSERT INTO test (data) VALUES (?)", QStringLiteral("Hello World"));
+        // Insert some initial data
+        co_await database->execute("INSERT INTO test (data) VALUES (?)", QStringLiteral("Hello World"));
+    });
 
     // Retrieve some data from the database.
     // The data is directly returned as our HelloWorld struct.
