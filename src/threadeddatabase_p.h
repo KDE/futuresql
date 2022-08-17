@@ -60,7 +60,7 @@ concept FromSqlCustom = requires(T v, typename T::ColumnTypes row)
 };
 
 template <typename T>
-requires FromSql<T> and (!FromSqlCustom<T>)
+requires FromSql<T> && (!FromSqlCustom<T>)
 auto deserialize(typename T::ColumnTypes &&row) {
     return constructFromTuple<T>(std::move(row));
 }
