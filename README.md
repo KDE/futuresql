@@ -26,7 +26,7 @@ The following example demonstrates the usage of FutureSQL in conjunction with QC
 #include <QTimer>
 
 // QCoro
-#include <QCoro/Task>
+#include <QCoro/QCoroTask>
 #include <QCoro/QCoroFuture>
 
 // FutureSQL
@@ -41,8 +41,11 @@ struct HelloWorld {
     // Types that the database columns can be converted to. The types must be convertible from QVariant.
     using ColumnTypes = std::tuple<int, QString>;
 
-    // This function get's a row from the database as a tuple, and puts it into the HelloWorld structs.
-    static HelloWorld fromSql(ColumnTypes tuple) {
+    // This function gets a row from the database as a tuple, and puts it into the HelloWorld structs.
+    // If the ColumnTypes already match the types and order of the attributes in the struct, you don't need to implement it.
+    //
+    // Try to comment it out, the example should still compile and work.
+    static HelloWorld fromSql(ColumnTypes &&tuple) {
         auto [id, data] = tuple;
         return HelloWorld { id, data };
     }
@@ -61,10 +64,10 @@ QCoro::Task<> databaseExample() {
 
     // Here we open the database file, and get a handle to the database.
     auto database = ThreadedDatabase::establishConnection(config);
-    
+
     // Execute some queries.
     co_await database->execute("CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT)");
-    
+
     // Query parameters are bound by position in the query. The execute function is variadic and you can add as many parameters as you need.
     co_await database->execute("INSERT INTO test (data) VALUES (?)", QStringLiteral("Hello World"));
 
@@ -82,11 +85,9 @@ QCoro::Task<> databaseExample() {
 }
 
 // Just a minimal main function for QCoro, to start the Qt event loop.
-int main(int argc, char * argv[]) {
+int main(int argc, char *argv[]) {
     QCoreApplication app(argc, argv);
-
     QTimer::singleShot(0, databaseExample);
-
     return app.exec();
 }
 ```

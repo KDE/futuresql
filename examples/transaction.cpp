@@ -14,7 +14,7 @@
 #include <QTimer>
 
 // QCoro
-#include <QCoro/Task>
+#include <QCoro/QCoroTask>
 #include <QCoro/QCoroFuture>
 
 // FutureSQL
@@ -36,11 +36,6 @@ QCoro::Task<> transaction(std::unique_ptr<ThreadedDatabase> &database, Func quer
 
 struct HelloWorld {
     using ColumnTypes = std::tuple<int, QString>;
-
-    static HelloWorld fromSql(ColumnTypes tuple) {
-        auto [id, data] = tuple;
-        return HelloWorld { id, data };
-    }
 
     // attributes
     int id;

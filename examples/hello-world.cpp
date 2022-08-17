@@ -8,9 +8,8 @@
 #include <QTimer>
 
 // QCoro
-#include <QCoro/Task>
+#include <QCoro/QCoroTask>
 #include <QCoro/QCoroFuture>
-#include <QCoro/QCoroSignal>
 
 // FutureSQL
 #include <ThreadedDatabase>
@@ -24,8 +23,11 @@ struct HelloWorld {
     // Types that the database columns can be converted to. The types must be convertible from QVariant.
     using ColumnTypes = std::tuple<int, QString>;
 
-    // This function get's a row from the database as a tuple, and puts it into the HelloWorld structs.
-    static HelloWorld fromSql(ColumnTypes tuple) {
+    // This function gets a row from the database as a tuple, and puts it into the HelloWorld structs.
+    // If the ColumnTypes already match the types and order of the attributes in the struct, you don't need to implement it.
+    //
+    // Try to comment it out, the example should still compile and work.
+    static HelloWorld fromSql(ColumnTypes &&tuple) {
         auto [id, data] = tuple;
         return HelloWorld { id, data };
     }
