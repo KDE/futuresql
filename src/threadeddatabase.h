@@ -127,7 +127,8 @@ public:
     /// \return Future of a list of lists of variants.
     ///
     /// T must provide a tuple of the column types as `using ColumnTypes = std::tuple<...>`
-    /// and a `static T fromSql(ColumnTypes tuple)` deserialization method.
+    /// and a, if the column types are not the same types in the same order as the attributes of the struct,
+    /// a `static T fromSql(ColumnTypes tuple)` deserialization method.
     ///
     template <typename T, typename ...Args>
     requires FromSql<T> && isQVariantConvertible<Args...>
