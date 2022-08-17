@@ -20,7 +20,7 @@ class DatabaseConfiguration;
 
 namespace asyncdatabase_private {
 
-// Helpers
+// Helpers for iterating over tuples
 template <typename Tuple, typename Func, std::size_t i>
 inline constexpr void iterate_impl(Tuple &tup, Func fun)
 {
@@ -38,25 +38,37 @@ inline constexpr void iterate_tuple(Tuple &tup, Func fun)
     asyncdatabase_private::iterate_impl<Tuple, Func, 0>(tup, fun);
 }
 
-template <typename T, typename QObjectDerivedType, typename Function>
-void connectFuture(const QFuture<T> &future, QObjectDerivedType *self, const Function &fun) {
-    auto watcher = std::make_shared<QFutureWatcher<T>>();
-    watcher->setFuture(future);
-    QObject::connect(watcher.get(), &QFutureWatcherBase::finished, self, [self, watcher, fun, future] {
-        if constexpr (std::is_same_v<void, T>) {
-            if constexpr (std::is_member_function_pointer_v<Function>) {
-                fun->*(self);
-            } else {
-                fun();
-            }
-        } else if (future.resultCount() > 0) {
-            if constexpr (std::is_member_function_pointer_v<Function>) {
-                (self->*fun)(watcher->result());
-            } else {
-                fun(watcher->result());
-            }
-        }
-    });
+// Helpers to construct a struct from a tuple
+template <typename T, typename ...Args>
+constexpr T constructFromTuple(std::tuple<Args...> &&args) {
+    return std::apply([](auto && ...args) { return T { args...}; }, std::move(args));
+}
+
+template <typename T>
+concept FromSql = requires(T v, typename T::ColumnTypes row)
+{
+    typename T::ColumnTypes;
+    { std::tuple(row) } -> std::same_as<typename T::ColumnTypes>;
+};
+
+template <typename T>
+concept FromSqlCustom = requires(T v, typename T::ColumnTypes row)
+{
+    typename T::ColumnTypes;
+    { std::tuple(row) } -> std::same_as<typename T::ColumnTypes>;
+    { T::fromSql(row) } -> std::same_as<T>;
+};
+
+template <typename T>
+requires FromSql<T> and (!FromSqlCustom<T>)
+auto deserialize(typename T::ColumnTypes &&row) {
+    return constructFromTuple<T>(std::move(row));
+}
+
+template <typename T>
+requires FromSqlCustom<T>
+auto deserialize(typename T::ColumnTypes &&row) {
+    return T::fromSql(std::move(row));
 }
 
 using Row  = std::vector<QVariant>;
@@ -105,10 +117,12 @@ public:
     auto getResults(const QString &sqlQuery, Args... args) -> QFuture<std::vector<T>> {
         return runAsync([=, this] {
             auto query = executeQuery(sqlQuery, args...);
-            const auto rows = parseRows<typename T::ColumnTypes>(retrieveRows(query));
+            auto rows = parseRows<typename T::ColumnTypes>(retrieveRows(query));
 
             std::vector<T> deserializedRows;
-            std::ranges::transform(rows, std::back_inserter(deserializedRows), T::fromSql);
+            std::ranges::transform(rows, std::back_inserter(deserializedRows), [](auto &&row) {
+                return deserialize<T>(std::move(row));
+            });
             return deserializedRows;
         });
     }
@@ -118,7 +132,7 @@ public:
         return runAsync([=, this]() -> std::optional<T> {
             auto query = executeQuery(sqlQuery, args...);
             if (const auto row = retrieveOptionalRow(query)) {
-                return T::fromSql(parseRow<typename T::ColumnTypes>(*row));
+                return deserialize<T>(parseRow<typename T::ColumnTypes>(*row));
             }
 
             return std::nullopt;

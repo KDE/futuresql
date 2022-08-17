@@ -66,7 +66,6 @@ concept FromSql = requires(T v, typename T::ColumnTypes row)
 {
     typename T::ColumnTypes;
     { std::tuple(row) } -> std::same_as<typename T::ColumnTypes>;
-    { T::fromSql(row) } -> std::same_as<T>;
 };
 
 template <typename ...Args>

@@ -5,18 +5,26 @@
 #include <QTest>
 #include <QTimer>
 
-#include <QCoro/Task>
+#include <QCoro/QCoroTask>
 #include <QCoro/QCoroFuture>
 
 #include <threadeddatabase.h>
 
-struct Test {
+struct TestCustom {
     using ColumnTypes = std::tuple<int, QString>;
 
     static auto fromSql(ColumnTypes columns) {
         auto [id, data] = columns;
-        return Test { id, data };
+        return TestCustom { id, data };
     }
+
+public:
+    int id;
+    QString data;
+};
+
+struct TestDefault {
+    using ColumnTypes = std::tuple<int, QString>;
 
 public:
     int id;
@@ -27,26 +35,40 @@ class SqliteTest : public QObject {
     Q_OBJECT
 
 private Q_SLOTS:
-    void testInMemory() {
-        bool finished = false;
-        QMetaObject::invokeMethod(this, [&]() -> QCoro::Task<> {
-            DatabaseConfiguration cfg;
-            cfg.setDatabaseName(":memory:");
-            cfg.setType(DATABASE_TYPE_SQLITE);
-            auto db = ThreadedDatabase::establishConnection(cfg);
+    static QCoro::Task<std::unique_ptr<ThreadedDatabase>> initDatabase() {
+        DatabaseConfiguration cfg;
+        cfg.setDatabaseName(":memory:");
+        cfg.setType(DATABASE_TYPE_SQLITE);
+        auto db = ThreadedDatabase::establishConnection(cfg);
 
-            co_await db->execute("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, data TEXT)");
-            co_await db->execute("INSERT INTO test (data) VALUES (?)", "Hello World");
-            auto opt = co_await db->getResult<Test>("SELECT * FROM test LIMIT 1");
+        co_await db->execute("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, data TEXT)");
+        co_await db->execute("INSERT INTO test (data) VALUES (?)", "Hello World");
+
+        co_return db;
+    }
+
+    void testDeserialization() {
+        bool finished = false;
+        QMetaObject::invokeMethod(this, [&finished]() -> QCoro::Task<> {
+            auto db = co_await initDatabase();
+
+            // Custom deserializer
+            auto opt = co_await db->getResult<TestCustom>("SELECT * FROM test LIMIT 1");
             Q_ASSERT(opt.has_value());
-            auto list = co_await db->getResults<Test>("SELECT * FROM test");
+            auto list = co_await db->getResults<TestCustom>("SELECT * FROM test");
             Q_ASSERT(list.size() == 1);
             co_await db->execute("INSERT INTO test (data) VALUES (?)", "FutureSQL");
-            list = co_await db->getResults<Test>("SELECT * from test ORDER BY id ASC");
+            list = co_await db->getResults<TestCustom>("SELECT * from test ORDER BY id ASC");
             Q_ASSERT(list.size() == 2);
             Q_ASSERT(list.at(0).data == "Hello World");
 
-            Q_UNREACHABLE();
+            // default deserializer
+            auto opt2 = co_await db->getResult<TestDefault>("SELECT * FROM test LIMIT 1");
+            Q_ASSERT(opt2.has_value());
+            auto list2 = co_await db->getResults<TestDefault>("SELECT * from test ORDER BY id ASC");
+            Q_ASSERT(list2.size() == 2);
+            Q_ASSERT(list2.at(0).data == "Hello World");
+
 
             finished = true;
         });

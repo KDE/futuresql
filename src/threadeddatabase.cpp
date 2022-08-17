@@ -155,7 +155,11 @@ AsyncSqlDatabase::AsyncSqlDatabase()
 {
 }
 
-AsyncSqlDatabase::~AsyncSqlDatabase() = default;
+AsyncSqlDatabase::~AsyncSqlDatabase() {
+    runAsync([db = d->database] {
+        QSqlDatabase::removeDatabase(db.databaseName());
+    });
+};
 
 Row AsyncSqlDatabase::retrieveRow(const QSqlQuery &query) {
     Row row;
