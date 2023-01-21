@@ -98,10 +98,6 @@ void runDatabaseMigrations(QSqlDatabase &database, const QString &migrationDirec
 
 void printSqlError(const QSqlQuery &query);
 
-// non-template helper functions to allow patching a much as possible in the shared library
-QSqlQuery prepareQuery(const QSqlDatabase &database, const QString &sqlQuery);
-QSqlQuery runQuery(QSqlQuery &query);
-
 struct AsyncSqlDatabasePrivate;
 
 class AsyncSqlDatabase : public QObject {
@@ -117,7 +113,13 @@ public:
     auto getResults(const QString &sqlQuery, Args... args) -> QFuture<std::vector<T>> {
         return runAsync([=, this] {
             auto query = executeQuery(sqlQuery, args...);
-            auto rows = parseRows<typename T::ColumnTypes>(retrieveRows(query));
+
+            // If the query failed to execute, don't try to deserialize it
+            if (!query) {
+                return std::vector<T> {};
+            }
+
+            auto rows = parseRows<typename T::ColumnTypes>(retrieveRows(*query));
 
             std::vector<T> deserializedRows;
             std::ranges::transform(rows, std::back_inserter(deserializedRows), [](auto &&row) {
@@ -131,11 +133,17 @@ public:
     auto getResult(const QString &sqlQuery, Args... args) -> QFuture<std::optional<T>> {
         return runAsync([=, this]() -> std::optional<T> {
             auto query = executeQuery(sqlQuery, args...);
-            if (const auto row = retrieveOptionalRow(query)) {
+
+            // If the query failed to execute, don't try to deserialize it
+            if (!query) {
+                return {};
+            }
+
+            if (const auto row = retrieveOptionalRow(*query)) {
                 return deserialize<T>(parseRow<typename T::ColumnTypes>(*row));
             }
 
-            return std::nullopt;
+            return {};
         });
     }
 
@@ -152,15 +160,19 @@ public:
 
 private:
     template <typename ...Args>
-    QSqlQuery executeQuery(const QString &sqlQuery, Args... args) {
+    std::optional<QSqlQuery> executeQuery(const QString &sqlQuery, Args... args) {
         auto query = prepareQuery(db(), sqlQuery);
+        if (!query) {
+            return {};
+        }
+
         auto argsTuple = std::make_tuple<Args...>(std::move(args)...);
         int i = 0;
         asyncdatabase_private::iterate_tuple(argsTuple, [&](auto &arg) {
-            query.bindValue(i, arg);
+            query->bindValue(i, arg);
             i++;
         });
-        return runQuery(query);
+        return runQuery(*query);
     }
 
     template <typename Functor>
@@ -186,6 +198,10 @@ private:
     std::optional<Row> retrieveOptionalRow(QSqlQuery &query);
 
     QSqlDatabase &db();
+
+    // non-template helper functions to allow patching a much as possible in the shared library
+    std::optional<QSqlQuery> prepareQuery(const QSqlDatabase &database, const QString &sqlQuery);
+    QSqlQuery runQuery(QSqlQuery &query);
 
     std::unique_ptr<AsyncSqlDatabasePrivate> d;
 };

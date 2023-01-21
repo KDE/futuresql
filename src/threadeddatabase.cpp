@@ -107,6 +107,7 @@ void runDatabaseMigrations(QSqlDatabase &database, const QString &migrationDirec
 
 struct AsyncSqlDatabasePrivate {
     QSqlDatabase database;
+    std::unordered_map<QString, QSqlQuery> preparedQueryCache;
 };
 
 // Internal asynchronous database class
@@ -212,17 +213,30 @@ void printSqlError(const QSqlQuery &query)
     qCDebug(asyncdatabase) << "SQL error:" << query.lastError().text();
 }
 
-QSqlQuery prepareQuery(const QSqlDatabase &database, const QString &sqlQuery)
+std::optional<QSqlQuery> AsyncSqlDatabase::prepareQuery(const QSqlDatabase &database, const QString &sqlQuery)
 {
     qCDebug(asyncdatabase) << "Running" << sqlQuery;
+
+    // Check whether we already have a prepared version of this query
+    if (d->preparedQueryCache.contains(sqlQuery)) {
+        return d->preparedQueryCache[sqlQuery];
+    }
+
+    // If not, prepare one
     QSqlQuery query(database);
+
+    // If this fails, return without caching the query
     if (!query.prepare(sqlQuery)) {
         printSqlError(query);
+        return {};
     }
+
+    // Else, cache the prepared query
+    d->preparedQueryCache.insert({sqlQuery, query});
     return query;
 }
 
-QSqlQuery runQuery(QSqlQuery &query)
+QSqlQuery AsyncSqlDatabase::runQuery(QSqlQuery &query)
 {
     if (!query.exec()) {
         printSqlError(query);
