@@ -166,19 +166,19 @@ private:
     template <typename Functor>
     QFuture<std::invoke_result_t<Functor>> runAsync(Functor func) {
         using ReturnType = std::invoke_result_t<Functor>;
-        auto interface = std::make_shared<QFutureInterface<ReturnType>>();
-        QMetaObject::invokeMethod(this, [interface, func] {
+        QFutureInterface<ReturnType> interface;
+        QMetaObject::invokeMethod(this, [interface, func]() mutable {
             if constexpr (!std::is_same_v<ReturnType, void>) {
                 auto result = func();
-                interface->reportResult(result);
+                interface.reportResult(result);
             } else {
                 func();
             }
 
-            interface->reportFinished();
+            interface.reportFinished();
         });
 
-        return interface->future();
+        return interface.future();
     }
 
     Row retrieveRow(const QSqlQuery &query);
