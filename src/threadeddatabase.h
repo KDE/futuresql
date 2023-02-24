@@ -166,5 +166,9 @@ struct SingleValue {
         return SingleValue { value };
     }
 
+    operator const T &() const {
+        return value;
+    }
+
     T value;
 };

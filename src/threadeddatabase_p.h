@@ -104,7 +104,7 @@ QSqlQuery runQuery(QSqlQuery &query);
 
 struct AsyncSqlDatabasePrivate;
 
-class AsyncSqlDatabase : public QObject {
+class FUTURESQL_EXPORT AsyncSqlDatabase : public QObject {
     Q_OBJECT
 
 public:

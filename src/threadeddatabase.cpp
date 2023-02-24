@@ -64,7 +64,7 @@ void runDatabaseMigrations(QSqlDatabase &database, const QString &migrationDirec
     for (const auto &entry : entries) {
         QDir subdir(entry);
         if (subdir.dirName() > currentVersion) {
-            QFile file(migrationDirectory % QDir::separator() % entry % QDir::separator() % "up.sql");
+            QFile file(migrationDirectory % QDir::separator() % entry % QDir::separator() % u"up.sql");
             if (!file.open(QFile::ReadOnly)) {
                 qCDebug(asyncdatabase) << "Failed to open migration file" << file.fileName();
             }
@@ -77,7 +77,7 @@ void runDatabaseMigrations(QSqlDatabase &database, const QString &migrationDirec
 
             bool migrationSuccessful = true;
             for (const QByteArray &statement : statements) {
-                const auto trimmedStatement = statement.trimmed();
+                const auto trimmedStatement = QString::fromUtf8(statement.trimmed());
                 QSqlQuery query(database);
 
                 if (!trimmedStatement.isEmpty()) {
@@ -141,7 +141,6 @@ auto AsyncSqlDatabase::runMigrations(const QString &migrationDirectory) -> QFutu
         runDatabaseMigrations(d->database, migrationDirectory);
     });
 }
-
 auto AsyncSqlDatabase::setCurrentMigrationLevel(const QString &migrationName) -> QFuture<void> {
     return runAsync([=, this] {
         createInternalTable(d->database);
@@ -212,7 +211,7 @@ void printSqlError(const QSqlQuery &query)
     qCDebug(asyncdatabase) << "SQL error:" << query.lastError().text();
 }
 
-QSqlQuery prepareQuery(const QSqlDatabase &database, const QString &sqlQuery)
+FUTURESQL_EXPORT QSqlQuery prepareQuery(const QSqlDatabase &database, const QString &sqlQuery)
 {
     qCDebug(asyncdatabase) << "Running" << sqlQuery;
     QSqlQuery query(database);
@@ -222,7 +221,7 @@ QSqlQuery prepareQuery(const QSqlDatabase &database, const QString &sqlQuery)
     return query;
 }
 
-QSqlQuery runQuery(QSqlQuery &query)
+FUTURESQL_EXPORT QSqlQuery runQuery(QSqlQuery &query)
 {
     if (!query.exec()) {
         printSqlError(query);

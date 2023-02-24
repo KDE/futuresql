@@ -15,10 +15,12 @@ target_include_directories(futuresql
     INTERFACE "$<INSTALL_INTERFACE:${FUTURESQL_INSTALL_INCLUDEDIR}>"
 )
 
-set_target_properties(futuresql PROPERTIES
-    VERSION     ${PROJECT_VERSION}
-    SOVERSION   0
-    EXPORT_NAME "FutureSQL"
+ecm_setup_version(
+    PROJECT
+    VARIABLE_PREFIX FutureSQL
+    VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/futuresql_version.h"
+    PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/FutureSQLConfigVersion.cmake"
+    SOVERSION 0
 )
 
 ecm_generate_export_header(futuresql
@@ -43,13 +45,6 @@ ecm_generate_headers(FutureSQL_CAMEL_CASE_HEADERS
 set(FutureSQL_HEADERS ${FutureSQL_HEADERS} threadeddatabase_p.h ${CMAKE_CURRENT_BINARY_DIR}/futuresql_export.h)
 
 set(CMAKECONFIG_INSTALL_DIR "${KDE_INSTALL_CMAKEPACKAGEDIR}/FutureSQL")
-
-ecm_setup_version(
-  PROJECT
-  VARIABLE_PREFIX FutureSQL
-  VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/futuresql_version.h"
-  PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/FutureSQLConfigVersion.cmake"
-  SOVERSION 5)
 
 configure_package_config_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/FutureSQLConfig.cmake.in"
