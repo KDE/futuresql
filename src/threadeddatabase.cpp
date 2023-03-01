@@ -17,7 +17,7 @@
 #define SCHAMA_MIGRATIONS_TABLE "__qt_schema_migrations"
 
 Q_DECLARE_LOGGING_CATEGORY(asyncdatabase)
-Q_LOGGING_CATEGORY(asyncdatabase, "asyncdatabase")
+Q_LOGGING_CATEGORY(asyncdatabase, "futuresql")
 
 namespace asyncdatabase_private {
 
