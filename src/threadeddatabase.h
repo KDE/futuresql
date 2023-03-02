@@ -145,6 +145,12 @@ public:
         return db().getResult<T, Args...>(sqlQuery, args...);
     }
 
+    template <typename Func>
+    requires std::is_invocable_v<Func, const QSqlDatabase &>
+    auto runOnThread(Func &&func) -> QFuture<std::invoke_result_t<Func, const QSqlDatabase &>> {
+        return db().runOnThread(std::move(func));
+    }
+
     ThreadedDatabase();
     ~ThreadedDatabase();
 

@@ -146,6 +146,14 @@ public:
         });
     }
 
+    template <typename Func>
+    requires std::is_invocable_v<Func, const QSqlDatabase &>
+    auto runOnThread(Func &&func) -> QFuture<std::invoke_result_t<Func, const QSqlDatabase &>> {
+        return runAsync([func = std::move(func), this]() {
+            return func(db());
+        });
+    }
+
     auto runMigrations(const QString &migrationDirectory) -> QFuture<void>;
 
     auto setCurrentMigrationLevel(const QString &migrationName) -> QFuture<void>;
