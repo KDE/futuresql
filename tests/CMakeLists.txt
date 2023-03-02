@@ -2,5 +2,5 @@
 #
 # SPDX-License-Identifier: BSD-2-Clause
 
-ecm_add_tests(sqlitetest.cpp LINK_LIBRARIES futuresql QCoro5::Core Qt::Test)
+ecm_add_tests(sqlitetest.cpp LINK_LIBRARIES futuresql QCoro${QT_MAJOR_VERSION}::Core Qt::Test)
 include_directories(${CMAKE_SOURCE_DIR}/src/ ${CMAKE_BINARY_DIR}/src/)

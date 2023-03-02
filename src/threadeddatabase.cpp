@@ -226,7 +226,7 @@ FUTURESQL_EXPORT QSqlQuery runQuery(QSqlQuery &query)
     if (!query.exec()) {
         printSqlError(query);
     }
-    return query;
+    return std::move(query);
 }
 
 }

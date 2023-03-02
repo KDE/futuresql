@@ -33,7 +33,7 @@ set(CMAKE_AUTOMOC ON)
 
 add_subdirectory(src)
 if (BUILD_TESTING OR BUILD_EXAMPLES)
-    find_package(QCoro5 REQUIRED COMPONENTS Core)
+    find_package(QCoro${QT_MAJOR_VERSION} REQUIRED COMPONENTS Core)
     qcoro_enable_coroutines()
 endif()
 
