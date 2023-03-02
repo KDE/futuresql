@@ -92,6 +92,9 @@ int main(int argc, char *argv[]) {
 }
 ```
 
+In code were coroutines don't make sense, you can use `QCoro::connect` of QCoro > v0.8.0,
+or `QFuture<T>::then()` on Qt6, to run a callback once a database query finished.
+
 ## Migrations
 
 FutureSQL can manage database migrations in a way that is mostly compatible with diesel.
