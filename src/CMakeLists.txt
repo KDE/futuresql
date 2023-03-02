@@ -23,6 +23,10 @@ ecm_setup_version(
     SOVERSION 0
 )
 
+set_target_properties(futuresql PROPERTIES
+    EXPORT_NAME FutureSQL
+)
+
 ecm_generate_export_header(futuresql
     VERSION ${PROJECT_VERSION}
     BASE_NAME FutureSQL
