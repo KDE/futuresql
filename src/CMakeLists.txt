@@ -20,11 +20,12 @@ ecm_setup_version(
     VARIABLE_PREFIX FutureSQL
     VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/futuresql_version.h"
     PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/FutureSQLConfigVersion.cmake"
-    SOVERSION 0
 )
 
-set_target_properties(futuresql PROPERTIES
+set_target_properties(futuresql
+    PROPERTIES
     EXPORT_NAME FutureSQL
+    SOVERSION 0
 )
 
 ecm_generate_export_header(futuresql
@@ -58,10 +59,10 @@ configure_package_config_file(
 )
 
 install(FILES ${FutureSQL_HEADERS}
-        DESTINATION ${FUTURESQL_INSTALL_INCLUDEDIR} # prefix matching C++ namespace
+        DESTINATION ${FUTURESQL_INSTALL_INCLUDEDIR}
         COMPONENT Devel)
 install(FILES ${FutureSQL_CAMEL_CASE_HEADERS}
-        DESTINATION ${FUTURESQL_INSTALL_INCLUDEDIR} # prefix matching C++ namespace
+        DESTINATION ${FUTURESQL_INSTALL_INCLUDEDIR}
         COMPONENT Devel)
 
 install(FILES
