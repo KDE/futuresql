@@ -44,4 +44,5 @@ endif()
 if (BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
+
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)

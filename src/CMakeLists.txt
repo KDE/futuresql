@@ -2,38 +2,42 @@
 #
 # SPDX-License-Identifier: BSD-2-Clause
 
-add_library(futuresql SHARED threadeddatabase.cpp)
+# Different target names for Qt5 and Qt6 builds
+set(FUTURESQL_TARGET futuresql${QT_MAJOR_VERSION})
+set(FUTURESQL_MAME FutureSQL${QT_MAJOR_VERSION})
 
-target_link_libraries(futuresql PUBLIC Qt${QT_MAJOR_VERSION}::Core Qt${QT_MAJOR_VERSION}::Sql)
+add_library(${FUTURESQL_TARGET} SHARED threadeddatabase.cpp)
 
-add_library(FutureSQL::FutureSQL ALIAS futuresql)
+target_link_libraries(${FUTURESQL_TARGET} PUBLIC Qt::Core Qt::Sql)
 
-set(FUTURESQL_INSTALL_INCLUDEDIR "${KDE_INSTALL_INCLUDEDIR}/FutureSQL")
+add_library(FutureSQL${QT_MAJOR_VERSION}::FutureSQL ALIAS ${FUTURESQL_TARGET})
 
-target_include_directories(futuresql
+set(FUTURESQL_INSTALL_INCLUDEDIR "${KDE_INSTALL_INCLUDEDIR}/${FUTURESQL_MAME}")
+
+target_include_directories(${FUTURESQL_TARGET}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
     INTERFACE "$<INSTALL_INTERFACE:${FUTURESQL_INSTALL_INCLUDEDIR}>"
 )
 
 ecm_setup_version(
     PROJECT
-    VARIABLE_PREFIX FutureSQL
+    VARIABLE_PREFIX ${FUTURESQL_MAME}
     VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/futuresql_version.h"
-    PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/FutureSQLConfigVersion.cmake"
+    PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/${FUTURESQL_MAME}ConfigVersion.cmake"
 )
 
-set_target_properties(futuresql
+set_target_properties(${FUTURESQL_TARGET}
     PROPERTIES
     EXPORT_NAME FutureSQL
     SOVERSION 0
 )
 
-ecm_generate_export_header(futuresql
+ecm_generate_export_header(${FUTURESQL_TARGET}
     VERSION ${PROJECT_VERSION}
     BASE_NAME FutureSQL
 )
 
-install(TARGETS futuresql
+install(TARGETS ${FUTURESQL_TARGET}
     EXPORT FutureSQLTargets
     ${KF5_INSTALL_TARGETS_DEFAULT_ARGS})
 
@@ -49,11 +53,11 @@ ecm_generate_headers(FutureSQL_CAMEL_CASE_HEADERS
 
 set(FutureSQL_HEADERS ${FutureSQL_HEADERS} threadeddatabase_p.h ${CMAKE_CURRENT_BINARY_DIR}/futuresql_export.h)
 
-set(CMAKECONFIG_INSTALL_DIR "${KDE_INSTALL_CMAKEPACKAGEDIR}/FutureSQL")
+set(CMAKECONFIG_INSTALL_DIR "${KDE_INSTALL_CMAKEPACKAGEDIR}/${FUTURESQL_MAME}")
 
 configure_package_config_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/FutureSQLConfig.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/FutureSQLConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/${FUTURESQL_MAME}Config.cmake"
     INSTALL_DESTINATION  ${CMAKECONFIG_INSTALL_DIR}
     PATH_VARS  CMAKE_INSTALL_PREFIX
 )
@@ -66,8 +70,8 @@ install(FILES ${FutureSQL_CAMEL_CASE_HEADERS}
         COMPONENT Devel)
 
 install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/FutureSQLConfig.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/FutureSQLConfigVersion.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/${FUTURESQL_MAME}Config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/${FUTURESQL_MAME}ConfigVersion.cmake"
     DESTINATION "${CMAKECONFIG_INSTALL_DIR}"
     COMPONENT Devel
 )
@@ -75,5 +79,5 @@ install(FILES
 install(EXPORT FutureSQLTargets
     DESTINATION "${CMAKECONFIG_INSTALL_DIR}"
     FILE FutureSQLTargets.cmake
-    NAMESPACE FutureSQL::
+    NAMESPACE FutureSQL${QT_MAJOR_VERSION}::
 )
