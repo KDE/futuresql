@@ -11,6 +11,18 @@
 
 #include <threadeddatabase.h>
 
+#define QCORO_VERIFY(statement) \
+do {\
+    if (!QTest::qVerify(static_cast<bool>(statement), #statement, "", __FILE__, __LINE__))\
+        co_return;\
+} while (false)
+
+#define QCORO_COMPARE(actual, expected) \
+do {\
+    if (!QTest::qCompare(actual, expected, #actual, #expected, __FILE__, __LINE__))\
+        co_return;\
+} while (false)
+
 struct TestCustom {
     using ColumnTypes = std::tuple<int, QString>;
 
@@ -56,20 +68,20 @@ private Q_SLOTS:
 
             // Custom deserializer
             auto opt = co_await db->getResult<TestCustom>(QStringLiteral("SELECT * FROM test LIMIT 1"));
-            Q_ASSERT(opt.has_value());
+            QCORO_VERIFY(opt.has_value());
             auto list = co_await db->getResults<TestCustom>(QStringLiteral("SELECT * FROM test"));
-            Q_ASSERT(list.size() == 1);
+            QCORO_COMPARE(list.size(), 1);
             co_await db->execute(QStringLiteral("INSERT INTO test (data) VALUES (?)"), QStringLiteral("FutureSQL"));
             list = co_await db->getResults<TestCustom>(QStringLiteral("SELECT * from test ORDER BY id ASC"));
-            Q_ASSERT(list.size() == 2);
-            Q_ASSERT(list.at(0).data == u"Hello World");
+            QCORO_COMPARE(list.size(), 2);
+            QCORO_COMPARE(list.at(0).data, u"Hello World");
 
             // default deserializer
             auto opt2 = co_await db->getResult<TestDefault>(QStringLiteral("SELECT * FROM test LIMIT 1"));
-            Q_ASSERT(opt2.has_value());
+            QCORO_VERIFY(opt2.has_value());
             auto list2 = co_await db->getResults<TestDefault>(QStringLiteral("SELECT * from test ORDER BY id ASC"));
-            Q_ASSERT(list2.size() == 2);
-            Q_ASSERT(list2.at(0).data == u"Hello World");
+            QCORO_COMPARE(list2.size(), 2);
+            QCORO_COMPARE(list2.at(0).data, u"Hello World");
 
             Q_EMIT finished();
         });
