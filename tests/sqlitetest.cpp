@@ -48,8 +48,6 @@ class SqliteTest : public QObject {
     Q_OBJECT
     Q_SIGNAL void finished();
 
-
-private Q_SLOTS:
     static QCoro::Task<std::unique_ptr<ThreadedDatabase>> initDatabase() {
         DatabaseConfiguration cfg;
         cfg.setDatabaseName(QStringLiteral(":memory:"));
@@ -62,6 +60,7 @@ private Q_SLOTS:
         co_return db;
     }
 
+private Q_SLOTS:
     void testDeserialization() {
         QMetaObject::invokeMethod(this, [this]() -> QCoro::Task<> {
             auto db = co_await initDatabase();
