@@ -4,6 +4,7 @@
 
 #include <QTest>
 #include <QTimer>
+#include <QSignalSpy>
 
 #include <QCoro/QCoroTask>
 #include <QCoro/QCoroFuture>
@@ -33,6 +34,8 @@ public:
 
 class SqliteTest : public QObject {
     Q_OBJECT
+    Q_SIGNAL void finished();
+
 
 private Q_SLOTS:
     static QCoro::Task<std::unique_ptr<ThreadedDatabase>> initDatabase() {
@@ -48,8 +51,7 @@ private Q_SLOTS:
     }
 
     void testDeserialization() {
-        bool finished = false;
-        QMetaObject::invokeMethod(this, [&finished]() -> QCoro::Task<> {
+        QMetaObject::invokeMethod(this, [this]() -> QCoro::Task<> {
             auto db = co_await initDatabase();
 
             // Custom deserializer
@@ -69,12 +71,12 @@ private Q_SLOTS:
             Q_ASSERT(list2.size() == 2);
             Q_ASSERT(list2.at(0).data == u"Hello World");
 
-
-            finished = true;
+            Q_EMIT finished();
         });
-        while (!finished) {
-            QCoreApplication::processEvents();
-        }
+
+        QSignalSpy spy(this, &SqliteTest::finished);
+        spy.wait();
+        QVERIFY(spy.count() == 1);
     }
 };
 
