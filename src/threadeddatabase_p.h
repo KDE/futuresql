@@ -100,7 +100,7 @@ void printSqlError(const QSqlQuery &query);
 
 // non-template helper functions to allow patching a much as possible in the shared library
 QSqlQuery prepareQuery(const QSqlDatabase &database, const QString &sqlQuery);
-QSqlQuery runQuery(QSqlQuery &query);
+QSqlQuery runQuery(QSqlQuery &&query);
 
 struct AsyncSqlDatabasePrivate;
 
@@ -168,7 +168,7 @@ private:
             query.bindValue(i, arg);
             i++;
         });
-        return runQuery(query);
+        return runQuery(std::move(query));
     }
 
     template <typename Functor>

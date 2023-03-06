@@ -221,7 +221,7 @@ FUTURESQL_EXPORT QSqlQuery prepareQuery(const QSqlDatabase &database, const QStr
     return query;
 }
 
-FUTURESQL_EXPORT QSqlQuery runQuery(QSqlQuery &query)
+FUTURESQL_EXPORT QSqlQuery runQuery(QSqlQuery &&query)
 {
     if (!query.exec()) {
         printSqlError(query);
