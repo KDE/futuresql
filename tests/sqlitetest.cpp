@@ -51,7 +51,9 @@ class SqliteTest : public QObject {
     static QCoro::Task<std::unique_ptr<ThreadedDatabase>> initDatabase() {
         DatabaseConfiguration cfg;
         cfg.setDatabaseName(QStringLiteral(":memory:"));
-        cfg.setType(DATABASE_TYPE_SQLITE);
+        cfg.setType(DatabaseType::SQLite);
+        Q_ASSERT(cfg.type() == QStringLiteral("QSQLITE"));
+
         auto db = ThreadedDatabase::establishConnection(cfg);
 
         co_await db->execute(QStringLiteral("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, data TEXT)"));

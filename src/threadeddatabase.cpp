@@ -249,6 +249,17 @@ void DatabaseConfiguration::setType(const QString &type) {
     d->type = type;
 }
 
+void DatabaseConfiguration::setType(DatabaseType type)
+{
+    switch (type) {
+    case DatabaseType::SQLite:
+        d->type = QStringLiteral("QSQLITE");
+        return;
+    }
+
+    Q_UNREACHABLE();
+}
+
 const QString &DatabaseConfiguration::type() const {
     return d->type;
 }

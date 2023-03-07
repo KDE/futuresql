@@ -24,6 +24,14 @@ class QSqlDatabase;
 struct DatabaseConfigurationPrivate;
 
 ///
+/// Selection of database types.
+/// If the required one is not included, use the DatabaseConfiguration::setType QString overload instead.
+///
+enum DatabaseType {
+    SQLite
+};
+
+///
 /// Options for connecting to a database
 ///
 class FUTURESQL_EXPORT DatabaseConfiguration {
@@ -34,6 +42,7 @@ public:
 
     /// Set the name of the database driver, for example DATABASE_TYPE_SQLITE or a custom string.
     void setType(const QString &type);
+    void setType(DatabaseType type);
     const QString &type() const;
 
     /// Set the hostname
@@ -55,11 +64,6 @@ public:
 private:
     QSharedDataPointer<DatabaseConfigurationPrivate> d;
 };
-
-///
-/// The SQLite database driver
-///
-const QString DATABASE_TYPE_SQLITE = QStringLiteral("QSQLITE");
 
 template <typename T>
 concept FromSql = requires(T v, typename T::ColumnTypes row)
