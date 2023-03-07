@@ -29,9 +29,9 @@
 // hand-crafting helper functions to deal with QFutures.
 template <typename Func>
 QCoro::Task<> transaction(std::unique_ptr<ThreadedDatabase> &database, Func queryFunc) {
-    co_await database->execute("BEGIN TRANSACTION");
+    co_await database->execute(QStringLiteral("BEGIN TRANSACTION"));
     co_await queryFunc();
-    co_await database->execute("COMMIT");
+    co_await database->execute(QStringLiteral("COMMIT"));
 }
 
 struct HelloWorld {
@@ -46,8 +46,8 @@ QCoro::Task<> databaseExample() {
     // This object contains the database configuration,
     // in this case just the path to the SQLite file, and the database type (SQLite).
     DatabaseConfiguration config;
-    config.setDatabaseName("database.sqlite");
-    config.setType(DATABASE_TYPE_SQLITE);
+    config.setDatabaseName(QStringLiteral("database.sqlite"));
+    config.setType(DatabaseType::SQLite);
 
     // Here we open the database file, and get a handle to the database.
     auto database = ThreadedDatabase::establishConnection(config);
@@ -55,15 +55,15 @@ QCoro::Task<> databaseExample() {
     // Run the following steps in a transaction
     co_await transaction(database, [&database]() -> QCoro::Task<> {
         // Create the table
-        co_await database->execute("CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT)");
+        co_await database->execute(QStringLiteral("CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT)"));
 
         // Insert some initial data
-        co_await database->execute("INSERT INTO test (data) VALUES (?)", QStringLiteral("Hello World"));
+        co_await database->execute(QStringLiteral("INSERT INTO test (data) VALUES (?)"), QStringLiteral("Hello World"));
     });
 
     // Retrieve some data from the database.
     // The data is directly returned as our HelloWorld struct.
-    auto results = co_await database->getResults<HelloWorld>("SELECT * FROM test");
+    auto results = co_await database->getResults<HelloWorld>(QStringLiteral("SELECT * FROM test"));
 
     // Print out the data in the result list
     for (const auto &result : results) {

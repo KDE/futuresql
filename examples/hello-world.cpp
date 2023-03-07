@@ -4,6 +4,7 @@
 
 
 // Qt
+#include "qstringliteral.h"
 #include <QCoreApplication>
 #include <QTimer>
 
@@ -41,21 +42,21 @@ QCoro::Task<> databaseExample() {
     // This object contains the database configuration,
     // in this case just the path to the SQLite file, and the database type (SQLite).
     DatabaseConfiguration config;
-    config.setDatabaseName("database.sqlite");
-    config.setType(DATABASE_TYPE_SQLITE);
+    config.setDatabaseName(QStringLiteral("database.sqlite"));
+    config.setType(DatabaseType::SQLite);
 
     // Here we open the database file, and get a handle to the database.
     auto database = ThreadedDatabase::establishConnection(config);
 
     // Execute some queries.
-    co_await database->execute("CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT)");
+    co_await database->execute(QStringLiteral("CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT)"));
 
     // Query parameters are bound by position in the query. The execute function is variadic and you can add as many parameters as you need.
-    co_await database->execute("INSERT INTO test (data) VALUES (?)", QStringLiteral("Hello World"));
+    co_await database->execute(QStringLiteral("INSERT INTO test (data) VALUES (?))"), QStringLiteral("Hello World"));
 
     // Retrieve some data from the database.
     // The data is directly returned as our HelloWorld struct.
-    auto results = co_await database->getResults<HelloWorld>("SELECT * FROM test");
+    auto results = co_await database->getResults<HelloWorld>(QStringLiteral("SELECT * FROM test"));
 
     // Print out the data in the result list
     for (const auto &result : results) {
