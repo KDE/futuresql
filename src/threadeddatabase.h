@@ -155,10 +155,11 @@ public:
         return db().runOnThread(std::move(func));
     }
 
-    ThreadedDatabase();
     ~ThreadedDatabase();
 
 private:
+    ThreadedDatabase();
+
     asyncdatabase_private::AsyncSqlDatabase &db();
 
     std::unique_ptr<ThreadedDatabasePrivate> d;

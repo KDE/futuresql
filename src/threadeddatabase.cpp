@@ -302,7 +302,7 @@ struct ThreadedDatabasePrivate {
 };
 
 std::unique_ptr<ThreadedDatabase> ThreadedDatabase::establishConnection(const DatabaseConfiguration &config) {
-    auto threadedDb = std::make_unique<ThreadedDatabase>();
+    auto threadedDb = std::unique_ptr<ThreadedDatabase>(new ThreadedDatabase());
     threadedDb->setObjectName(QStringLiteral("database thread"));
     threadedDb->d->db.moveToThread(&*threadedDb);
     threadedDb->start();
