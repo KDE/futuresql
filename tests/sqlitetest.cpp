@@ -60,30 +60,32 @@ class SqliteTest : public QObject {
         co_return db;
     }
 
+    QCoro::Task<> testDeserializationCoro() {
+        auto db = co_await initDatabase();
+
+        // Custom deserializer
+        auto opt = co_await db->getResult<TestCustom>(QStringLiteral("SELECT * FROM test LIMIT 1"));
+        QCORO_VERIFY(opt.has_value());
+        auto list = co_await db->getResults<TestCustom>(QStringLiteral("SELECT * FROM test"));
+        QCORO_COMPARE(list.size(), 1);
+        co_await db->execute(QStringLiteral("INSERT INTO test (data) VALUES (?)"), QStringLiteral("FutureSQL"));
+        list = co_await db->getResults<TestCustom>(QStringLiteral("SELECT * from test ORDER BY id ASC"));
+        QCORO_COMPARE(list.size(), 2);
+        QCORO_COMPARE(list.at(0).data, u"Hello World");
+
+        // default deserializer
+        auto opt2 = co_await db->getResult<TestDefault>(QStringLiteral("SELECT * FROM test LIMIT 1"));
+        QCORO_VERIFY(opt2.has_value());
+        auto list2 = co_await db->getResults<TestDefault>(QStringLiteral("SELECT * from test ORDER BY id ASC"));
+        QCORO_COMPARE(list2.size(), 2);
+        QCORO_COMPARE(list2.at(0).data, u"Hello World");
+
+        Q_EMIT finished();
+    }
+
 private Q_SLOTS:
     void testDeserialization() {
-        QMetaObject::invokeMethod(this, [this]() -> QCoro::Task<> {
-            auto db = co_await initDatabase();
-
-            // Custom deserializer
-            auto opt = co_await db->getResult<TestCustom>(QStringLiteral("SELECT * FROM test LIMIT 1"));
-            QCORO_VERIFY(opt.has_value());
-            auto list = co_await db->getResults<TestCustom>(QStringLiteral("SELECT * FROM test"));
-            QCORO_COMPARE(list.size(), 1);
-            co_await db->execute(QStringLiteral("INSERT INTO test (data) VALUES (?)"), QStringLiteral("FutureSQL"));
-            list = co_await db->getResults<TestCustom>(QStringLiteral("SELECT * from test ORDER BY id ASC"));
-            QCORO_COMPARE(list.size(), 2);
-            QCORO_COMPARE(list.at(0).data, u"Hello World");
-
-            // default deserializer
-            auto opt2 = co_await db->getResult<TestDefault>(QStringLiteral("SELECT * FROM test LIMIT 1"));
-            QCORO_VERIFY(opt2.has_value());
-            auto list2 = co_await db->getResults<TestDefault>(QStringLiteral("SELECT * from test ORDER BY id ASC"));
-            QCORO_COMPARE(list2.size(), 2);
-            QCORO_COMPARE(list2.at(0).data, u"Hello World");
-
-            Q_EMIT finished();
-        });
+        QMetaObject::invokeMethod(this, &SqliteTest::testDeserializationCoro);
 
         QSignalSpy spy(this, &SqliteTest::finished);
         spy.wait();
