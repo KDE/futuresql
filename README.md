@@ -60,7 +60,7 @@ QCoro::Task<> databaseExample() {
     // in this case just the path to the SQLite file, and the database type (SQLite).
     DatabaseConfiguration config;
     config.setDatabaseName("database.sqlite");
-    config.setType(DATABASE_TYPE_SQLITE);
+    config.setType(DatabaseType::SQLite);
 
     // Here we open the database file, and get a handle to the database.
     auto database = ThreadedDatabase::establishConnection(config);

@@ -40,9 +40,11 @@ public:
     DatabaseConfiguration(const DatabaseConfiguration &);
     ~DatabaseConfiguration();
 
-    /// Set the name of the database driver, for example DATABASE_TYPE_SQLITE or a custom string.
+    /// Set the name of the database driver. If it is included in DatabaseType, use the enum overload instead
     void setType(const QString &type);
+    /// Set the type of database. If DatabaseType doesn't include the one you need, use the QString overload instead
     void setType(DatabaseType type);
+    /// Get the name of the database driver
     const QString &type() const;
 
     /// Set the hostname
@@ -72,8 +74,12 @@ concept FromSql = requires(T v, typename T::ColumnTypes row)
     { std::tuple(row) } -> std::same_as<typename T::ColumnTypes>;
 };
 
+namespace detail {
+
 template <typename ...Args>
 constexpr bool isQVariantConvertible = std::conjunction_v<std::is_convertible<Args, QVariant>...>;
+
+}
 
 struct ThreadedDatabasePrivate;
 
@@ -84,30 +90,30 @@ class FUTURESQL_EXPORT ThreadedDatabase : public QThread {
 public:
     ///
     /// \brief Connect to a database
-    /// \param configuration of the database connection
+    /// \param config Configuration of the database connection
     /// \return
     ///
     static std::unique_ptr<ThreadedDatabase> establishConnection(const DatabaseConfiguration &config);
 
     ///
     /// \brief Execute an SQL query on the database, ignoring the result.
-    /// \param SQL query string to execute
-    /// \param Parameters to bind to the placeholders in the SQL Query
+    /// \param sqlQuery SQL query string to execute
+    /// \param args Parameters to bind to the placeholders in the SQL Query
     /// \return
     ///
     template <typename ...Args>
-    requires isQVariantConvertible<Args...>
+    requires detail::isQVariantConvertible<Args...>
     auto execute(const QString &sqlQuery, Args... args) -> QFuture<void> {
         return db().execute(sqlQuery, args...);
     }
 
     ///
-    /// Run database migrations in the given directory.
+    /// Run the database migrations in the given directory.
     /// The directory needs to contain a subdirectory for each migration.
     /// The subdirectories need to be named so that when sorted alphabetically the migrations will be run in the correct order.
     /// Each subdirectory needs to contain a file named up.sql.
     ///
-    /// \param Directory which contains the migrations.
+    /// \param migrationDirectory Directory which contains the migrations.
     /// \return a future that finishes when the database changes are finished
     ///
     auto runMigrations(const QString &migrationDirectory) -> QFuture<void>;
@@ -126,8 +132,8 @@ public:
 
     ///
     /// \brief Execute an SQL query on the database, retrieving the result.
-    /// \param SQL Query to execute
-    /// \param parameters to bind to the placeholders in the SQL query.
+    /// \param sqlQuery SQL Query to execute
+    /// \param args Parameters to bind to the placeholders in the SQL query.
     /// \return Future of a list of lists of variants.
     ///
     /// T must provide a tuple of the column types as `using ColumnTypes = std::tuple<...>`
@@ -135,20 +141,27 @@ public:
     /// a `static T fromSql(ColumnTypes tuple)` deserialization method.
     ///
     template <typename T, typename ...Args>
-    requires FromSql<T> && isQVariantConvertible<Args...>
+    requires FromSql<T> && detail::isQVariantConvertible<Args...>
     auto getResults(const QString &sqlQuery, Args... args) -> QFuture<std::vector<T>> {
         return db().getResults<T, Args...>(sqlQuery, args...);
     }
 
     ///
     /// \brief Like getResults, but for retrieving just one row.
+    /// \param sqlQuery SQL Query to execute
+    /// \param args Parameters to bind to the placeholders in the SQL query.
     ///
     template <typename T, typename ...Args>
-    requires FromSql<T> && isQVariantConvertible<Args...>
+    requires FromSql<T> && detail::isQVariantConvertible<Args...>
     auto getResult(const QString &sqlQuery, Args... args) -> QFuture<std::optional<T>> {
         return db().getResult<T, Args...>(sqlQuery, args...);
     }
 
+    ///
+    /// \brief Run a custom function on the database thread. The function is passed the internal QSqlDatabase.
+    /// \param func A function that takes a QSqlDatabase
+    /// \return The result of the function, wrapped in a QFuture
+    ///
     template <typename Func>
     requires std::is_invocable_v<Func, const QSqlDatabase &>
     auto runOnThread(Func &&func) -> QFuture<std::invoke_result_t<Func, const QSqlDatabase &>> {

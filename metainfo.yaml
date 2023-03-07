@@ -12,5 +12,5 @@ public_lib: true
 deprecated: false
 release: true
 libraries:
- - cmake: FutureSQL::FutureSQL
+ - cmake: FutureSQL5::FutureSQL
 cmakename: FutureSQL
