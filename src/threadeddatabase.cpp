@@ -211,7 +211,7 @@ void printSqlError(const QSqlQuery &query)
     qCDebug(asyncdatabase) << "SQL error:" << query.lastError().text();
 }
 
-FUTURESQL_EXPORT QSqlQuery prepareQuery(const QSqlDatabase &database, const QString &sqlQuery)
+QSqlQuery prepareQuery(const QSqlDatabase &database, const QString &sqlQuery)
 {
     qCDebug(asyncdatabase) << "Running" << sqlQuery;
     QSqlQuery query(database);
@@ -221,7 +221,7 @@ FUTURESQL_EXPORT QSqlQuery prepareQuery(const QSqlDatabase &database, const QStr
     return query;
 }
 
-FUTURESQL_EXPORT QSqlQuery runQuery(QSqlQuery &&query)
+QSqlQuery runQuery(QSqlQuery &&query)
 {
     if (!query.exec()) {
         printSqlError(query);

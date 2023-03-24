@@ -100,8 +100,8 @@ void runDatabaseMigrations(QSqlDatabase &database, const QString &migrationDirec
 void printSqlError(const QSqlQuery &query);
 
 // non-template helper functions to allow patching a much as possible in the shared library
-QSqlQuery prepareQuery(const QSqlDatabase &database, const QString &sqlQuery);
-QSqlQuery runQuery(QSqlQuery &&query);
+FUTURESQL_EXPORT QSqlQuery prepareQuery(const QSqlDatabase &database, const QString &sqlQuery);
+FUTURESQL_EXPORT QSqlQuery runQuery(QSqlQuery &&query);
 
 struct AsyncSqlDatabasePrivate;
 
