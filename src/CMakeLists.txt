@@ -6,7 +6,7 @@
 set(FUTURESQL_TARGET futuresql${QT_MAJOR_VERSION})
 set(FUTURESQL_MAME FutureSQL${QT_MAJOR_VERSION})
 
-add_library(${FUTURESQL_TARGET} SHARED threadeddatabase.cpp)
+add_library(${FUTURESQL_TARGET} threadeddatabase.cpp)
 
 target_link_libraries(${FUTURESQL_TARGET} PUBLIC Qt::Core Qt::Sql)
 
