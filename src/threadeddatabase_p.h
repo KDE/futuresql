@@ -7,6 +7,7 @@
 #include <memory>
 #include <tuple>
 #include <optional>
+#include <concepts>
 
 #include <QFuture>
 #include <QFutureWatcher>
