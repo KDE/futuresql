@@ -91,7 +91,7 @@ template <typename RowTypesTuple>
 auto parseRows(const Rows &rows) -> std::vector<RowTypesTuple> {
     std::vector<RowTypesTuple> parsedRows;
     parsedRows.reserve(rows.size());
-    std::ranges::transform(rows, std::back_inserter(parsedRows), parseRow<RowTypesTuple>);
+    std::transform(rows.begin(), rows.end(), std::back_inserter(parsedRows), parseRow<RowTypesTuple>);
     return parsedRows;
 }
 
@@ -121,7 +121,7 @@ public:
             auto rows = parseRows<typename T::ColumnTypes>(retrieveRows(query));
 
             std::vector<T> deserializedRows;
-            std::ranges::transform(rows, std::back_inserter(deserializedRows), [](auto &&row) {
+            std::transform(rows.begin(), rows.end(), std::back_inserter(deserializedRows), [](auto &&row) {
                 return deserialize<T>(std::move(row));
             });
             return deserializedRows;
