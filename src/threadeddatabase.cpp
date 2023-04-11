@@ -50,8 +50,11 @@ QString currentDatabaseVersion(QSqlDatabase &database) {
     query.prepare(QStringLiteral("select version from " SCHAMA_MIGRATIONS_TABLE " order by version desc limit 1"));
     query.exec();
 
-    query.next();
-    return query.value(0).toString();
+    if (query.next()) {
+        return query.value(0).toString();
+    } else {
+        return {};
+    }
 }
 
 void runDatabaseMigrations(QSqlDatabase &database, const QString &migrationDirectory)
@@ -85,6 +88,7 @@ void runDatabaseMigrations(QSqlDatabase &database, const QString &migrationDirec
                     qCDebug(asyncdatabase) << "Running" << trimmedStatement;
                     if (!query.prepare(trimmedStatement)) {
                         printSqlError(query);
+                        migrationSuccessful = false;
                     } else {
                         bool success = query.exec();
                         migrationSuccessful &= success;
@@ -99,7 +103,10 @@ void runDatabaseMigrations(QSqlDatabase &database, const QString &migrationDirec
                 database.commit();
                 markMigrationRun(database, subdir.dirName());
             } else {
+                qCWarning(asyncdatabase) << "Migration" << subdir.dirName() << "failed, retrying next time.";
+                qCWarning(asyncdatabase) << "Stopping migrations here, as the next migration may depens on this one.";
                 database.rollback();
+                return;
             }
         }
     }

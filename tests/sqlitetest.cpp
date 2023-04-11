@@ -85,9 +85,28 @@ class SqliteTest : public QObject {
         Q_EMIT finished();
     }
 
+    QCoro::Task<> testMigrationCoro() {
+        DatabaseConfiguration cfg;
+        cfg.setDatabaseName(QStringLiteral(":memory:"));
+        cfg.setType(DatabaseType::SQLite);
+
+        auto db = ThreadedDatabase::establishConnection(cfg);
+        co_await db->runMigrations(QStringLiteral(TEST_DIR "/migrations/"));
+
+        Q_EMIT finished();
+    }
+
 private Q_SLOTS:
     void testDeserialization() {
         QMetaObject::invokeMethod(this, &SqliteTest::testDeserializationCoro);
+
+        QSignalSpy spy(this, &SqliteTest::finished);
+        spy.wait();
+        QVERIFY(spy.count() == 1);
+    }
+
+    void testMigration() {
+        QMetaObject::invokeMethod(this, &SqliteTest::testMigrationCoro);
 
         QSignalSpy spy(this, &SqliteTest::finished);
         spy.wait();
