@@ -15,6 +15,8 @@
 #include <QSqlError>
 #include <QLoggingCategory>
 
+#include <unordered_map>
+
 #define SCHAMA_MIGRATIONS_TABLE "__qt_schema_migrations"
 
 Q_DECLARE_LOGGING_CATEGORY(asyncdatabase)
