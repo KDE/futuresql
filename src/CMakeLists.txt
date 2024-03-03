@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: BSD-2-Clause
 
 # Different target names for Qt5 and Qt6 builds
-set(FUTURESQL_TARGET futuresql${QT_MAJOR_VERSION})
-set(FUTURESQL_NAME FutureSQL${QT_MAJOR_VERSION})
+set(FUTURESQL_TARGET futuresql6)
+set(FUTURESQL_NAME FutureSQL6)
 
 add_library(${FUTURESQL_TARGET}
     threadeddatabase.cpp
@@ -12,9 +12,9 @@ add_library(${FUTURESQL_TARGET}
     threadeddatabase_p.h
 )
 
-target_link_libraries(${FUTURESQL_TARGET} PUBLIC Qt::Core Qt::Sql)
+target_link_libraries(${FUTURESQL_TARGET} PUBLIC Qt6::Core Qt6::Sql)
 
-add_library(FutureSQL${QT_MAJOR_VERSION}::FutureSQL ALIAS ${FUTURESQL_TARGET})
+add_library(FutureSQL6::FutureSQL ALIAS ${FUTURESQL_TARGET})
 
 set(FUTURESQL_INSTALL_INCLUDEDIR "${KDE_INSTALL_INCLUDEDIR}/${FUTURESQL_NAME}")
 
@@ -87,5 +87,5 @@ install(FILES
 install(EXPORT FutureSQLTargets
     DESTINATION "${CMAKECONFIG_INSTALL_DIR}"
     FILE FutureSQLTargets.cmake
-    NAMESPACE FutureSQL${QT_MAJOR_VERSION}::
+    NAMESPACE FutureSQL6::
 )
