@@ -64,6 +64,10 @@ void runDatabaseMigrations(QSqlDatabase &database, const QString &migrationDirec
     createInternalTable(database);
 
     QDir dir(migrationDirectory);
+    if (!dir.exists()) {
+        qCWarning(asyncdatabase) << "The migrations directory" << migrationDirectory
+                                 << "does not exist";
+    }
     const auto entries = dir.entryList(QDir::Filter::Dirs | QDir::Filter::NoDotAndDotDot, QDir::SortFlag::Name);
 
     const QString currentVersion = currentDatabaseVersion(database);
