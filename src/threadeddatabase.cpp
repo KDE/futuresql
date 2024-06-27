@@ -226,13 +226,13 @@ void printSqlError(const QSqlQuery &query)
     qCDebug(asyncdatabase) << "SQL error:" << query.lastError().text();
 }
 
-std::optional<QSqlQuery> AsyncSqlDatabase::prepareQuery(const QSqlDatabase &database, const QString &sqlQuery)
+QSqlQuery *AsyncSqlDatabase::prepareQuery(const QSqlDatabase &database, const QString &sqlQuery)
 {
     qCDebug(asyncdatabase) << "Running" << sqlQuery;
 
     // Check whether we already have a prepared version of this query
     if (d->preparedQueryCache.contains(sqlQuery)) {
-        return d->preparedQueryCache[sqlQuery];
+        return &d->preparedQueryCache[sqlQuery];
     }
 
     // If not, prepare one
@@ -241,20 +241,20 @@ std::optional<QSqlQuery> AsyncSqlDatabase::prepareQuery(const QSqlDatabase &data
     // If this fails, return without caching the query
     if (!query.prepare(sqlQuery)) {
         printSqlError(query);
-        return {};
+        return nullptr;
     }
 
     // Else, cache the prepared query
-    d->preparedQueryCache.insert({sqlQuery, query});
-    return query;
+    auto [it, _] = d->preparedQueryCache.insert({sqlQuery, std::move(query)});
+    return &it->second;
 }
 
-QSqlQuery AsyncSqlDatabase::runQuery(QSqlQuery &&query)
+QSqlQuery &AsyncSqlDatabase::runQuery(QSqlQuery &query)
 {
     if (!query.exec()) {
         printSqlError(query);
     }
-    return std::move(query);
+    return query;
 }
 
 }

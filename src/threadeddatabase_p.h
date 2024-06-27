@@ -168,8 +168,9 @@ public:
     auto setCurrentMigrationLevel(const QString &migrationName) -> QFuture<void>;
 
 private:
-    template <typename ...Args>
-    std::optional<QSqlQuery> executeQuery(const QString &sqlQuery, Args... args) {
+    template<typename... Args>
+    QSqlQuery *executeQuery(const QString &sqlQuery, Args... args)
+    {
         auto query = prepareQuery(db(), sqlQuery);
         if (!query) {
             return {};
@@ -181,7 +182,7 @@ private:
             query->bindValue(i, arg);
             i++;
         });
-        return runQuery(std::move(*query));
+        return &runQuery(*query);
     }
 
     template <typename Functor>
@@ -209,8 +210,8 @@ private:
     QSqlDatabase &db();
 
     // non-template helper functions to allow patching a much as possible in the shared library
-    std::optional<QSqlQuery> prepareQuery(const QSqlDatabase &database, const QString &sqlQuery);
-    QSqlQuery runQuery(QSqlQuery &&query);
+    QSqlQuery *prepareQuery(const QSqlDatabase &database, const QString &sqlQuery);
+    QSqlQuery &runQuery(QSqlQuery &query);
 
     std::unique_ptr<AsyncSqlDatabasePrivate> d;
 };
