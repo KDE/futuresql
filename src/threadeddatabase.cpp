@@ -223,7 +223,7 @@ QSqlDatabase &AsyncSqlDatabase::db()
 
 void printSqlError(const QSqlQuery &query)
 {
-    qCDebug(asyncdatabase) << "SQL error:" << query.lastError().text();
+    qCWarning(asyncdatabase) << "SQL error:" << query.lastError().text();
 }
 
 std::optional<QSqlQuery> AsyncSqlDatabase::prepareQuery(const QSqlDatabase &database, const QString &sqlQuery)
