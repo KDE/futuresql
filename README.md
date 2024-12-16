@@ -15,8 +15,6 @@ automatic database migrations and simple mapping to objects.
 In order to make FutureSQL's use of templates less confusing, FutureSQL uses C++20 concepts,
 and requires a C++20 compiler.
 
-Warning: The API is not finalized yet.
-
 ## Usage
 
 The following example demonstrates the usage of FutureSQL in conjunction with QCoro:
